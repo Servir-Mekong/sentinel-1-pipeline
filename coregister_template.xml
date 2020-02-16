@@ -1,0 +1,60 @@
+<graph id="preprocessingSentinel1">
+
+    <version>1.0</version>
+
+    <node id="MasterSlaveReaderNode">
+        <operator>ProductSet-Reader</operator>
+        <sources/>
+        <parameters>
+            <fileList></fileList>
+        </parameters>
+    </node>
+
+    <!-- Coregistration Node -->
+    <node id="CoregistrationNode">
+        <operator>DEM-Assisted-Coregistration</operator>
+        <sources>
+            <source>MasterSlaveReaderNode</source>
+        </sources>
+        <parameters>
+            <demName>SRTM 1Sec HGT</demName>
+            <demResamplingMethod>BICUBIC_INTERPOLATION</demResamplingMethod>
+            <resamplingType>BICUBIC_INTERPOLATION</resamplingType>
+            <tileExtensionPercent>100</tileExtensionPercent>
+            <maskOutAreaWithoutElevation>true</maskOutAreaWithoutElevation>
+        </parameters>
+    </node>
+
+    <!-- Speckle Filter Node -->
+    <node id="SpeckleFilterNode">
+        <operator>Speckle-Filter</operator>
+        <sources>
+            <source>CoregistrationNode</source>
+        </sources>
+        <parameters>
+            <filter>Lee Sigma</filter>
+            <enl>4.0</enl>
+            <numLooksStr>4</numLooksStr>
+            <windowSize>9x9</windowSize>
+            <sigmaStr>0.9</sigmaStr>
+            <targetWindowSizeStr>5x5</targetWindowSizeStr>
+        </parameters>
+    </node>
+
+    <!-- RD Terrain Correction Node -->
+    <node id="TerrainCorrectionNode">
+      <operator>Terrain-Correction</operator>
+      <sources>
+          <source>SpeckleFilterNode</source>
+      </sources>
+      <parameters>
+        <sourceBands></sourceBands>
+        <demName>SRTM 1Sec HGT</demName>
+		<nodataValueAtSea>false</nodataValueAtSea>
+        <pixelSpacingInMeter>10.0</pixelSpacingInMeter>
+		<pixelSpacingInDegree>8.983152841195215E-5</pixelSpacingInDegree>
+      </parameters>
+    </node>
+
+
+</graph>

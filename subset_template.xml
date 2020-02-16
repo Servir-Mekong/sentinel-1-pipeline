@@ -1,0 +1,27 @@
+<graph id="subset">
+
+    <version>1.0</version>
+
+	<!-- Read Node -->
+    <node id="ProductReaderNode">
+      <operator>Read</operator>
+      <sources/>
+      <parameters>
+        <file></file>
+        <formatName>BEAM-DIMAP</formatName>
+      </parameters>
+    </node>
+
+	<!-- Subset -->
+    <node id="SubsetNode">
+        <operator>Subset</operator>
+        <sources>
+            <source>ProductReaderNode</source>
+        </sources>
+        <parameters>
+            <sourceBands></sourceBands>
+            <copyMetadata>true</copyMetadata>
+        </parameters>
+    </node>
+
+</graph>

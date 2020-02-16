@@ -1,0 +1,17 @@
+<graph id="writeio">
+
+    <version>1.0</version>
+
+    <node id="WriteIONode">
+        <operator>Write</operator>
+        <sources>
+            <source></source>
+        </sources>
+        <parameters>
+		    <file></file>
+            <formatName>GeoTIFF</formatName>
+            <clearCacheAfterRowWrite>true</clearCacheAfterRowWrite>
+        </parameters>
+    </node>
+
+</graph>
