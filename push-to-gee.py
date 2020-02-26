@@ -2,9 +2,7 @@ import logging
 logging.basicConfig(filename='push-2-gee.log', level=logging.INFO)
 
 import ast
-import os
 import glob
-import ee
 import psycopg2
 import subprocess
 import json
