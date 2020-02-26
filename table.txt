@@ -32,5 +32,6 @@ CREATE TABLE sentinel1 (
     downloaded                  boolean default false,
     processed                   boolean default false,
     uploadedtogs                boolean default false,
-    uploadedtogee               boolean default false
+    uploadedtogee               boolean default false,
+    ee_task_id                  varcher(150)
 );
