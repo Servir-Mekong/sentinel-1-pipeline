@@ -81,7 +81,7 @@ def set_path():
 
 def get_unprocessed_data(year):
     conn, cur = connect_to_db(db)
-    cur.execute("SELECT title, footprint FROM sentinel1 WHERE beginposition >= '{}-01-01' AND beginposition < '{}-01-01' AND processed={} AND slave={};".format(year, year+1, False, False))
+    cur.execute("SELECT title, footprint FROM sentinel1 WHERE beginposition >= '{}-01-01' AND beginposition < '{}-01-01' AND processed={} AND slave={} ORDER BY title;".format(year, year+1, False, False))
     data = cur.fetchall()
     close_connection(conn, cur)
     output = []

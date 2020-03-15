@@ -43,7 +43,7 @@ def close_connection(cur, conn):
 def get_processed_images():
     conn, cur = connect_to_db(db)
     cur.execute("SELECT id, title, beginposition, endposition, {} \
-                 FROM sentinel1 WHERE processed={} AND slave={} AND uploadedtogs={} LIMIT 100;".format(','.join(properties), True, False, False))
+                 FROM sentinel1 WHERE processed={} AND slave={} AND uploadedtogs={} ORDER BY title;".format(','.join(properties), True, False, False))
     data = cur.fetchall()
     close_connection(conn, cur)
     return data
