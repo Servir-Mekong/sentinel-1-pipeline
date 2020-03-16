@@ -96,12 +96,6 @@ def main():
             }
             manifest_bands.append(_band)
 
-        # save the info
-        conn, cur = connect_to_db(db)
-        cur.execute("UPDATE sentinel1 SET uploadedtogs=TRUE WHERE id='{}'".format(image[0]))
-        conn.commit()
-        close_connection(conn, cur)
-
         # properties
         manifest_properties = {}
         start_index = 4
@@ -139,7 +133,7 @@ def main():
             task_id = result.split("ID:")[1].strip()
             # save the info
             conn, cur = connect_to_db(db)
-            cur.execute("UPDATE sentinel1 SET ee_task_id='{}' WHERE id='{}'".format(task_id, image[0]))
+            cur.execute("UPDATE sentinel1 SET uploadedtogs=TRUE, ee_task_id='{}' WHERE id='{}'".format(task_id, image[0]))
             conn.commit()
             close_connection(conn, cur)
 
