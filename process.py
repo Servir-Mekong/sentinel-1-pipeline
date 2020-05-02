@@ -1,5 +1,6 @@
 import logging
-logging.basicConfig(filename='process.access.log', level=logging.INFO)
+
+logging.basicConfig(filename='logs/process.log', level=logging.INFO)
 
 import os
 import psycopg2
@@ -8,6 +9,7 @@ import time
 from lxml import etree
 from shapely import wkb
 import sys
+
 sys.path.append('/mnt/sentinel1')
 from snappy import ProductIO
 
@@ -29,49 +31,52 @@ exec_cmd = '%s %s -t %s{}_Orb_Cal_ML_TF.dim {}.zip' % (gpt_path, graph_path, int
 coreg_cmd = '%s %s -t %s{0}_Orb_Cal_ML_TF_Stack_Spk_EC.dim' % (gpt_path, coregister_path, intermediate_output_path)
 export_cmd = '%s %s -t %s{}_{} -f GeoTIFF-BigTIFF' % (gpt_path, subset_path, output_path)
 
-
 # use port if hosted in some other port than 5432
 db = {
-    'dbname'  : 'db-name',
-    'user'    : 'user-name',
-    'host'    : 'localhost',
+    'dbname': 'db-name',
+    'user': 'user-name',
+    'host': 'localhost',
     'password': 'db-password'
 }
 
+
 def connect_to_db(db):
     try:
-        connection_parameters = 'dbname=%s user=%s host=%s password=%s' % (db['dbname'], db['user'], db['host'], db['password'])
+        connection_parameters = 'dbname=%s user=%s host=%s password=%s' % (
+        db['dbname'], db['user'], db['host'], db['password'])
         conn = psycopg2.connect(connection_parameters)
     except Exception as e:
         print('problem connecting to the database!')
     else:
         return conn, conn.cursor()
 
+
 def close_connection(cur, conn):
     cur.close()
     conn.close()
 
-def parse(source):
 
+def parse(source):
     try:
         parser = etree.XMLParser(
-            huge_tree = True,
-            no_network = False,
-            remove_blank_text = True,
+            huge_tree=True,
+            no_network=False,
+            remove_blank_text=True,
         )
         return etree.parse(source, parser)
     except Exception as e:
         print("XML Parse error: {}".format(e))
         return None
 
-def tostring(tree, xml_declaration=False, pretty_print=True):
 
+def tostring(tree, xml_declaration=False, pretty_print=True):
     return etree.tostring(
         tree,
-        xml_declaration = xml_declaration,
-        encoding = "utf-8",
-        pretty_print = pretty_print,
+        xml_declaration=xml_declaration,
+        encoding="utf-8",
+        pretty_print=pretty_print,
     ).decode("utf-8'")
+
 
 def set_path():
     os.path.dirname(os.path.dirname(__file__))
@@ -79,34 +84,39 @@ def set_path():
     os.chdir(path)
     return path
 
+
 def get_unprocessed_data(year):
     conn, cur = connect_to_db(db)
-    cur.execute("SELECT title, footprint FROM sentinel1 WHERE beginposition >= '{}-01-01' AND beginposition < '{}-01-01' AND processed={} AND slave={} ORDER BY title;".format(year, year+1, False, False))
+    cur.execute(
+        "SELECT title, footprint FROM sentinel1 WHERE beginposition >= '{}-01-01' AND beginposition < '{}-01-01' AND processed={} AND slave={} ORDER BY title;".format(
+            year, year + 1, False, False))
     data = cur.fetchall()
     close_connection(conn, cur)
     output = []
     for _data in data:
         pair = {
-            'geom' : wkb.loads(_data[1], hex=True),
+            'geom': wkb.loads(_data[1], hex=True),
             'file': '{}{}'.format(image_path, _data[0]),
             'title': '{}'.format(_data[0])
         }
         output.append(pair)
     return output
 
+
 def get_slaves():
     conn, cur = connect_to_db(db)
-    cur.execute("SELECT title, footprint FROM sentinel1 WHERE slave={};".format(True,))
+    cur.execute("SELECT title, footprint FROM sentinel1 WHERE slave={};".format(True, ))
     data = cur.fetchall()
     close_connection(conn, cur)
     output = []
     for _data in data:
         pair = {
-            'geom' : wkb.loads(_data[1], hex=True),
+            'geom': wkb.loads(_data[1], hex=True),
             'title': _data[0]
         }
         output.append(pair)
     return output
+
 
 def get_intersecting_slaves(master, slaves):
     output = []
@@ -117,11 +127,12 @@ def get_intersecting_slaves(master, slaves):
     for slave in slaves:
         if (slave['geom'].intersects(master['geom'])):
             pair = {
-                'geom' : slave['geom'],
-                'file':  '{}{}_Orb_Cal_ML_TF.dim'.format(slave_path, slave['title'])
+                'geom': slave['geom'],
+                'file': '{}{}_Orb_Cal_ML_TF.dim'.format(slave_path, slave['title'])
             }
             output.append(pair)
     return output
+
 
 def get_nodes():
     registration_tree = parse(coregister_template)
@@ -130,18 +141,21 @@ def get_nodes():
 
     return registration_tree, master_slave_node, terrain_correction_node
 
+
 def get_subset_node():
     subset_tree = parse(subset_template)
     product_reader_node = subset_tree.findall("./node[@id='ProductReaderNode']")[0]
     subset_node = subset_tree.findall("./node[@id='SubsetNode']")[0]
-    
+
     return subset_tree, product_reader_node, subset_node
+
 
 def list_dict_to_string(list, property):
     files = []
     for item in list:
         files.append(item[property])
     return ','.join(files)
+
 
 def get_string_month(month):
     month_map = {
@@ -160,8 +174,8 @@ def get_string_month(month):
     }
     return month_map[month]
 
-def main():
 
+def main():
     year = 2018
 
     data = get_unprocessed_data(year)
@@ -207,7 +221,7 @@ def main():
             master_slave_list.text = list_dict_to_string(intersecting_slaves, 'file')
 
             source_bands_list = terrain_correction_node.xpath('//sourceBands')[0]
-            source_bands_list.text =  ','.join(select_bands)
+            source_bands_list.text = ','.join(select_bands)
 
             with open(coregister_path, 'w') as f:
                 f.write(tostring(registration_tree, pretty_print=True))
@@ -231,18 +245,18 @@ def main():
 
                 os.remove(subset_path)
 
-
             conn, cur = connect_to_db(db)
             cur.execute("UPDATE sentinel1 SET processed=TRUE WHERE slave=FALSE and title='{}'".format(file_name))
             conn.commit()
             close_connection(conn, cur)
 
             os.remove(coregister_path)
-            
+
             end_time = time.time()
 
-            with open('/mnt/sentinel1/performance.log', 'a') as plog:
-                plog.write('file {} => {} slaves => {} minutes\n'.format(file_name, len(intersecting_slaves) -1, (end_time - start_time)/60))
+            with open('logs/performance.log', 'a') as plog:
+                plog.write('file {} => {} slaves => {} minutes\n'.format(file_name, len(intersecting_slaves) - 1,
+                                                                         (end_time - start_time) / 60))
 
             print('end file')
             print('********************************************************')
@@ -250,6 +264,7 @@ def main():
             logging.error(e)
             print(e)
             continue
+
 
 if __name__ == '__main__':
     main()

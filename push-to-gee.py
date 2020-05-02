@@ -1,5 +1,6 @@
 import logging
-logging.basicConfig(filename='push-2-gee.log', level=logging.INFO)
+
+logging.basicConfig(filename='logs/push-2-gee.log', level=logging.INFO)
 
 import ast
 import glob
@@ -12,9 +13,10 @@ output_path = '/mnt/sentinel1/output/'
 final_output = '/mnt/sentinel1/output-2-push/'
 gdal_path = '/home/bbhandari/anaconda3/envs/gee/bin/'
 manifest_dir = '/mnt/sentinel1/manifests/'
+cloud_path = 'gs://gpl-process/sentinel1'
 
 calc = '{0}gdal_calc.py -A %s --calc="A*10000" --outfile={1}%s --type=UInt16'.format(gdal_path, final_output)
-_cp_to_gs = 'gsutil cp {0}%s gs://servirmekong/sentinel1'.format(final_output)
+_cp_to_gs = 'gsutil cp {0}%s {1}'.format(final_output, cloud_path)
 _upload_to_gee = 'earthengine upload image --manifest "{0}%s.json"'.format(manifest_dir)
 
 db = {
@@ -24,29 +26,36 @@ db = {
     'password': '<your-password>'
 }
 
-properties = ['acquisitiontype', 'lastorbitnumber', 'lastrelativeorbitnumber', 'missiondatatakeid', 'orbitdirection', 'orbitnumber',
-              'platformidentifier', 'polarisationmode', 'producttype', 'relativeorbitnumber', 'sensoroperationalmode', 'swathidentifier']
+properties = ['acquisitiontype', 'lastorbitnumber', 'lastrelativeorbitnumber', 'missiondatatakeid', 'orbitdirection',
+              'orbitnumber', 'platformidentifier', 'polarisationmode', 'producttype', 'relativeorbitnumber',
+              'sensoroperationalmode', 'swathidentifier']
+
 
 def connect_to_db(db):
     try:
-        connection_parameters = 'dbname=%s user=%s host=%s password=%s' % (db['dbname'], db['user'], db['host'], db['password'])
+        connection_parameters = 'dbname=%s user=%s host=%s password=%s' % (
+        db['dbname'], db['user'], db['host'], db['password'])
         conn = psycopg2.connect(connection_parameters)
     except Exception as e:
         print('problem connecting to the database!')
     else:
         return conn, conn.cursor()
 
+
 def close_connection(cur, conn):
     cur.close()
     conn.close()
 
+
 def get_processed_images():
     conn, cur = connect_to_db(db)
     cur.execute("SELECT id, title, beginposition, endposition, {} \
-                 FROM sentinel1 WHERE processed={} AND slave={} AND uploadedtogs={} ORDER BY title;".format(','.join(properties), True, False, False))
+                 FROM sentinel1WHERE processed={} AND slave={} AND uploadedtogs={} ORDER BY title;".format(
+        ','.join(properties), True, False, False))
     data = cur.fetchall()
     close_connection(conn, cur)
     return data
+
 
 def main():
     processed_images = get_processed_images()
@@ -83,7 +92,7 @@ def main():
                 "sources": [
                     {
                         "uris": [
-                            "gs://servirmekong/sentinel1/{}".format(file_name)
+                            "{}/{}".format(cloud_path, file_name)
                         ]
                     }
                 ]
@@ -99,8 +108,8 @@ def main():
         # properties
         manifest_properties = {}
         start_index = 4
-        for property in properties:
-            manifest_properties[property] = image[start_index]
+        for _property in properties:
+            manifest_properties[_property] = image[start_index]
             start_index += 1
 
         # start time
@@ -133,9 +142,11 @@ def main():
             task_id = result.split("ID:")[1].strip()
             # save the info
             conn, cur = connect_to_db(db)
-            cur.execute("UPDATE sentinel1 SET uploadedtogs=TRUE, ee_task_id='{}' WHERE id='{}'".format(task_id, image[0]))
+            cur.execute(
+                "UPDATE sentinel1 SET uploadedtogs=TRUE, ee_task_id='{}' WHERE id='{}'".format(task_id, image[0]))
             conn.commit()
             close_connection(conn, cur)
+
 
 if __name__ == '__main__':
     main()

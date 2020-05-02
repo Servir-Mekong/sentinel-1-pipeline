@@ -1,5 +1,5 @@
 import logging
-logging.basicConfig(filename='access.log', level=logging.WARNING)
+logging.basicConfig(filename='logs/metadata.download.log', level=logging.WARNING)
 
 import psycopg2
 
@@ -11,7 +11,7 @@ def connect_to_db(db):
         connection_parameters = 'dbname=%s user=%s host=%s password=%s' % (db['dbname'], db['user'], db['host'], db['password'])
         conn = psycopg2.connect(connection_parameters)
     except Exception as e:
-        print 'problem connecting to the database!'
+        print('problem connecting to the database!')
         logging.error(e)
     else:
         return conn, conn.cursor()
@@ -88,6 +88,7 @@ if __name__ == '__main__':
                         continue
                     else:
                         close_connection(conn, cur)
+            print('done date: {}'.format(e, _date.strftime('%Y-%m-%d')))
 
         _date += timedelta(days=1)
         if _date.year != start_year:
