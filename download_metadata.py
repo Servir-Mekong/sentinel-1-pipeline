@@ -4,7 +4,7 @@ logging.basicConfig(filename='logs/metadata.download.log', level=logging.WARNING
 import psycopg2
 
 from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 def connect_to_db(db):
     try:
