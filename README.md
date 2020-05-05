@@ -40,7 +40,7 @@ Example of footprint of set of slaves images we used.
 
 ## 4. Processing Slaves
 
-The slaves are processed using `process_slaves.py` and the processed slaved are stored in dir `slaves`
+The slaves are processed using `process_slaves.py` and the processed slaved are stored in dir `slaves`. The slaves are processed with step a-f of 5.
 
 ## 5. Processing Images
 
