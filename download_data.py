@@ -1,7 +1,13 @@
-# taken from ASF and modified as needed
+# -*- coding: utf-8 -*-
+
+from dotenv import load_dotenv
+load_dotenv('.env')
+
+import logging
+logging.basicConfig(filename='logs/download.data.log', level=logging.INFO)
 
 import sys, csv
-import os, os.path
+import os
 import platform
 import tempfile, shutil
 import re
@@ -12,12 +18,7 @@ import ssl
 import signal
 
 import xml.etree.ElementTree as ET
-
-import argparse
-import logging
-
-logging.basicConfig(filename='logs/download.data.log', level=logging.INFO)
-import psycopg2
+from dbio import *
 from datetime import datetime, timedelta
 import json
 
@@ -654,7 +655,7 @@ class bulk_downloader:
         # since we are downloading one file at a time!
         if len(self.success) > 0:
             try:
-                conn, cur = connect_to_db(db)
+                conn, cur = connect_to_db()
                 cur.execute("UPDATE sentinel1 SET downloaded=TRUE WHERE rid={}".format(rid))
                 conn.commit()
                 close_connection(conn, cur)
@@ -662,11 +663,10 @@ class bulk_downloader:
                 print('error inserting into db because {}'.format(e))
                 logging.error(e)
 
-        # ideally should not end up here
-        # but anyway
+        # ideally should not end up here but anyway
         if len(self.skipped) > 0:
             try:
-                conn, cur = connect_to_db(db)
+                conn, cur = connect_to_db()
                 cur.execute("UPDATE sentinel1 SET downloaded=FALSE WHERE rid={}".format(rid))
                 conn.commit()
                 close_connection(conn, cur)
@@ -675,55 +675,19 @@ class bulk_downloader:
                 logging.error(e)
 
 
-def connect_to_db(db):
-    try:
-        connection_parameters = 'dbname=%s user=%s host=%s password=%s' % (
-        db['dbname'], db['user'], db['host'], db['password'])
-        conn = psycopg2.connect(connection_parameters)
-    except Exception as e:
-        print('problem connecting to the database!')
-        logging.error(e)
-    else:
-        return conn, conn.cursor()
-
-
-def close_connection(cur, conn):
-    cur.close()
-    conn.close()
-
-
-# use port if hosted in some other port than 5432
-db = {
-    'dbname': 'db-name',
-    'user': 'user-name',
-    'host': 'localhost',
-    'password': 'db-password'
-}
-
 if __name__ == "__main__":
 
     # Setup a signal trap for SIGINT (Ctrl+C)
     signal.signal(signal.SIGINT, signal_handler)
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--start_year', '-s', type=str,
-                        help='year')
-    parser.add_argument('--username', '-u', type=str,
-                        help='username for the nasa earth login')
-    parser.add_argument('--password', '-p', type=str,
-                        help='password for the nasa earth login')
-
-    args = parser.parse_args()
-
-    start_year = args.start_year
-    username = args.username
-    password = args.password
+    start_year = int(os.getenv('YEAR'))
+    username = os.getenv('EARTHDATA_USERNAME')
+    password = os.getenv('EARTHDATA_PASSWORD')
 
     _date = datetime(int(start_year), 1, 1)
     condition = True
     while condition:
-        conn, cur = connect_to_db(db)
+        conn, cur = connect_to_db()
         cur.execute(
             "SELECT id, title, rid FROM sentinel1 where beginposition::date = date '{}' AND downloaded=FALSE;".format(
                 _date.strftime('%Y-%m-%d'), False))

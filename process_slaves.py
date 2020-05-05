@@ -1,44 +1,28 @@
+# -*- coding: utf-8 -*-
+
+from dotenv import load_dotenv
+load_dotenv('.env')
+
 import logging
 logging.basicConfig(filename='slave.process.access.log', level=logging.INFO)
 
 import os
-import psycopg2
 import subprocess
 
-image_path = '/mnt/sentinel1/images/'
-slave_path = '/mnt/sentinel1/slaves/'
-graph_path = '/mnt/sentinel1/pipeline.xml'
-gpt_path = '/usr/local/snap/bin/gpt'
+from dbio import *
+
+image_path = os.getenv('IMAGES_PATH')
+slave_path = os.getenv('SLAVES_PATH') #'/mnt/sentinel1/slaves/'
+graph_path = os.getenv('PROCESSING_XML')
+gpt_path = os.getenv('GPT_PATH')
 
 exec_cmd = '%s %s -t %s{}_Orb_Cal_ML_TF.dim {}{}.zip' % (gpt_path, graph_path, slave_path)
 
-# use port if hosted in some other port than 5432
-db = {
-    'dbname'  : 'db-name',
-    'user'    : 'user-name',
-    'host'    : 'localhost',
-    'password': 'db-password'
-}
-
-def connect_to_db(db):
-    try:
-        connection_parameters = 'dbname=%s user=%s host=%s password=%s' % (db['dbname'], db['user'], db['host'], db['password'])
-        conn = psycopg2.connect(connection_parameters)
-    except Exception as e:
-        print('problem connecting to the database!')
-        logging.error(e)
-    else:
-        return conn, conn.cursor()
-
-def close_connection(cur, conn):
-    cur.close()
-    conn.close()
 
 def save_information(title):
-    conn, cur = connect_to_db(db)
-    cur.execute("UPDATE sentinel1 SET processed=TRUE WHERE slave=TRUE and title='{}'".format(title))
-    conn.commit()
-    close_connection(conn, cur)
+    query = "UPDATE sentinel1 SET processed=TRUE WHERE slave=TRUE and title='{}'".format(title)
+    update_query(query)
+
 
 def set_path():
     os.path.dirname(os.path.dirname(__file__))
@@ -46,15 +30,15 @@ def set_path():
     os.chdir(path)
     return path
 
+
 def get_slaves():
-    conn, cur = connect_to_db(db)
-    cur.execute("SELECT title, footprint FROM sentinel1 WHERE processed=FALSE and slave=TRUE;")
-    data = cur.fetchall()
-    close_connection(conn, cur)
+    query = "SELECT title, footprint FROM sentinel1 WHERE processed=FALSE and slave=TRUE;"
+    data = get_query(query)
     output = []
     for _data in data:
         output.append(_data[0])
     return output
+
 
 def main():
     set_path()
@@ -73,6 +57,7 @@ def main():
             logging.error('problem processing file: {} because {}'.format(slave, e))
             print('problem processing file: {} because {}'.format(slave, e))
             continue
+
 
 if __name__ == '__main__':
     main()

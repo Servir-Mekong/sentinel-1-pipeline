@@ -5,7 +5,7 @@ cffi==1.13.2
 chardet==3.0.4
 cryptography==2.8
 decorator==4.4.1
-earthengine-api==0.1.211
+earthengine-api==0.1.220
 enum34==1.1.6
 future==0.18.2
 futures==3.3.0
@@ -23,6 +23,7 @@ idna==2.8
 ipaddress==1.0.23
 ipython==5.8.0
 ipython-genutils==0.2.0
+lxml~=4.2.5
 numpy==1.16.5
 pathlib2==2.3.5
 pexpect==4.8.0
@@ -37,10 +38,12 @@ pycparser==2.19
 Pygments==2.5.2
 pyOpenSSL==19.1.0
 PySocks==1.7.1
+python-dotenv==0.13.0
 pytz==2019.3
 requests==2.22.0
 rsa==4.0
 scandir==1.10.0
+sentinelsat~=0.13
 simplegeneric==0.8.1
 simplejson==3.17.0
 six==1.14.0

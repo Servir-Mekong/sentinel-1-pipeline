@@ -1,59 +1,40 @@
-import logging
+# -*- coding: utf-8 -*-
 
+from dotenv import load_dotenv
+load_dotenv('.env')
+
+import logging
 logging.basicConfig(filename='logs/process.log', level=logging.INFO)
 
 import os
-import psycopg2
-import subprocess
-import time
-from lxml import etree
-from shapely import wkb
 import sys
-
-sys.path.append('/mnt/sentinel1')
+sys.path.append(os.getenv('SNAPPY_PATH'))
 from snappy import ProductIO
 
-image_path = '/mnt/sentinel1/images/'
-slave_path = '/mnt/sentinel1/slaves/'
-intermediate_output_path = '/mnt/sentinel1/intermediate_output/'
-output_path = '/mnt/sentinel1/output/'
+import subprocess
+import time
 
-graph_path = '/mnt/sentinel1/pipeline.xml'
-coregister_path = '/mnt/sentinel1/coregister.xml'
-coregister_template = '/mnt/sentinel1/coregister_template.xml'
+from lxml import etree
+from shapely import wkb
+from dbio import *
 
-subset_path = '/mnt/sentinel1/subset.xml'
-subset_template = '/mnt/sentinel1/subset_template.xml'
+image_path = os.getenv('IMAGES_PATH')
+slave_path = os.getenv('SLAVES_PATH')
+intermediate_output_path = os.getenv('INTERMEDIATE_OUTPUT_PATH')
+output_path = os.getenv('OUTPUT_PATH')
 
-gpt_path = '/usr/local/snap/bin/gpt'
+graph_path = os.getenv('PROCESSING_XML')
+coregister_path = os.getenv('COREGISTRATION_XML')
+coregister_template = os.getenv('COREGISTRATION_TEMPLATE')
+
+subset_path = os.getenv('SUBSET_TEMPLATE')
+subset_template = os.getenv('SUBSET_XML')
+
+gpt_path = os.getenv('GPT_PATH')
 
 exec_cmd = '%s %s -t %s{}_Orb_Cal_ML_TF.dim {}.zip' % (gpt_path, graph_path, intermediate_output_path)
 coreg_cmd = '%s %s -t %s{0}_Orb_Cal_ML_TF_Stack_Spk_EC.dim' % (gpt_path, coregister_path, intermediate_output_path)
 export_cmd = '%s %s -t %s{}_{} -f GeoTIFF-BigTIFF' % (gpt_path, subset_path, output_path)
-
-# use port if hosted in some other port than 5432
-db = {
-    'dbname': 'db-name',
-    'user': 'user-name',
-    'host': 'localhost',
-    'password': 'db-password'
-}
-
-
-def connect_to_db(db):
-    try:
-        connection_parameters = 'dbname=%s user=%s host=%s password=%s' % (
-        db['dbname'], db['user'], db['host'], db['password'])
-        conn = psycopg2.connect(connection_parameters)
-    except Exception as e:
-        print('problem connecting to the database!')
-    else:
-        return conn, conn.cursor()
-
-
-def close_connection(cur, conn):
-    cur.close()
-    conn.close()
 
 
 def parse(source):
@@ -86,12 +67,9 @@ def set_path():
 
 
 def get_unprocessed_data(year):
-    conn, cur = connect_to_db(db)
-    cur.execute(
-        "SELECT title, footprint FROM sentinel1 WHERE beginposition >= '{}-01-01' AND beginposition < '{}-01-01' AND processed={} AND slave={} ORDER BY title;".format(
-            year, year + 1, False, False))
-    data = cur.fetchall()
-    close_connection(conn, cur)
+    query = "SELECT title, footprint FROM sentinel1 WHERE beginposition >= '{}-01-01' AND beginposition < '{}-01-01' " \
+            "AND processed={} AND slave={} ORDER BY title;".format(year, year + 1, False, False)
+    data = get_query(query)
     output = []
     for _data in data:
         pair = {
@@ -104,10 +82,8 @@ def get_unprocessed_data(year):
 
 
 def get_slaves():
-    conn, cur = connect_to_db(db)
-    cur.execute("SELECT title, footprint FROM sentinel1 WHERE slave={};".format(True, ))
-    data = cur.fetchall()
-    close_connection(conn, cur)
+    query = "SELECT title, footprint FROM sentinel1 WHERE slave={};".format(True, )
+    data = get_query(query)
     output = []
     for _data in data:
         pair = {
@@ -119,13 +95,12 @@ def get_slaves():
 
 
 def get_intersecting_slaves(master, slaves):
-    output = []
-    output.append({
+    output = [{
         'geom': master['geom'],
         'file': '{}{}_Orb_Cal_ML_TF.dim'.format(intermediate_output_path, master['title'])
-    })
+    }]
     for slave in slaves:
-        if (slave['geom'].intersects(master['geom'])):
+        if slave['geom'].intersects(master['geom']):
             pair = {
                 'geom': slave['geom'],
                 'file': '{}{}_Orb_Cal_ML_TF.dim'.format(slave_path, slave['title'])
@@ -138,7 +113,6 @@ def get_nodes():
     registration_tree = parse(coregister_template)
     master_slave_node = registration_tree.findall("./node[@id='MasterSlaveReaderNode']")[0]
     terrain_correction_node = registration_tree.findall("./node[@id='TerrainCorrectionNode']")[0]
-
     return registration_tree, master_slave_node, terrain_correction_node
 
 
@@ -146,7 +120,6 @@ def get_subset_node():
     subset_tree = parse(subset_template)
     product_reader_node = subset_tree.findall("./node[@id='ProductReaderNode']")[0]
     subset_node = subset_tree.findall("./node[@id='SubsetNode']")[0]
-
     return subset_tree, product_reader_node, subset_node
 
 
@@ -176,7 +149,7 @@ def get_string_month(month):
 
 
 def main():
-    year = 2018
+    year = int(os.getenv('YEAR'))
 
     data = get_unprocessed_data(year)
 
