@@ -19,8 +19,8 @@
             <sourceProduct>ApplyOrbitFileNode</sourceProduct>
         </sources>
         <parameters>
-			<removeThermalNoise>true</removeThermalNoise>
-			<reIntroduceThermalNoise>false</reIntroduceThermalNoise>
+            <removeThermalNoise>true</removeThermalNoise>
+            <reIntroduceThermalNoise>false</reIntroduceThermalNoise>
         </parameters>
     </node>
 
@@ -32,7 +32,7 @@
         </sources>
         <parameters>
             <borderLimit>1000</borderLimit>
-			<trimThreshold>0.5</trimThreshold>
+            <trimThreshold>0.5</trimThreshold>
         </parameters>
     </node>
 

@@ -52,9 +52,9 @@
             <demName>SRTM 1Sec HGT</demName>
             <demResamplingMethod>BICUBIC_INTERPOLATION</demResamplingMethod>
             <imgResamplingMethod>BICUBIC_INTERPOLATION</imgResamplingMethod>
-		    <nodataValueAtSea>false</nodataValueAtSea>
+            <nodataValueAtSea>false</nodataValueAtSea>
             <pixelSpacingInMeter>10.0</pixelSpacingInMeter>
-		    <pixelSpacingInDegree>8.983152841195215E-5</pixelSpacingInDegree>
+            <pixelSpacingInDegree>8.983152841195215E-5</pixelSpacingInDegree>
         </parameters>
     </node>
 
