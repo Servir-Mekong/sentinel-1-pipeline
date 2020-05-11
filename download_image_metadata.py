@@ -78,7 +78,7 @@ if __name__ == '__main__':
                         continue
                     else:
                         close_connection(conn, cur)
-            print('done date: {}'.format(e, _date.strftime('%Y-%m-%d')))
+            print('done date: {}'.format(_date.strftime('%Y-%m-%d')),)
 
         _date += timedelta(days=1)
         if _date.year != start_year:
