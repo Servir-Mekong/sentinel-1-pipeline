@@ -32,12 +32,12 @@
             <source>CoregistrationNode</source>
         </sources>
         <parameters>
-            <filter>Lee Sigma</filter>
-            <enl>4.0</enl>
+            <filter>Refined Lee</filter>
+            <!--<enl>4.0</enl>
             <numLooksStr>4</numLooksStr>
             <windowSize>9x9</windowSize>
             <sigmaStr>0.9</sigmaStr>
-            <targetWindowSizeStr>5x5</targetWindowSizeStr>
+            <targetWindowSizeStr>5x5</targetWindowSizeStr>-->
         </parameters>
     </node>
 

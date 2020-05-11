@@ -56,8 +56,8 @@
             <source>CalibrationNode</source>
         </sources>
         <parameters>
-            <nRgLooks>3</nRgLooks>
-            <nAzLooks>3</nAzLooks>
+            <nRgLooks>1</nRgLooks>
+            <nAzLooks>1</nAzLooks>
             <outputIntensity>true</outputIntensity>
             <grSquarePixel>true</grSquarePixel>
         </parameters>
