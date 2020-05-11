@@ -9,6 +9,8 @@ Sentinel 1 pre-processing pipeline using SNAP GPT 7.0
 
 ## 3. Construct postgis table using `table.sql`
 
+## 4. Copy and rename `.env.example` to `.env` and replace with actual values
+
 
 # Processing
 
