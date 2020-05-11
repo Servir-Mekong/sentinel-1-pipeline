@@ -13,6 +13,7 @@ from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 
 if __name__ == '__main__':
     start_year = int(os.getenv('YEAR'))
+    table_name = os.getenv('TABLE_NAME')
     _date = datetime(start_year, 1, 1)
     condition = True
     while condition:
@@ -64,9 +65,9 @@ if __name__ == '__main__':
                     conn, cur = connect_to_db()
                     try:
                         cur.execute(
-                            "INSERT INTO sentinel1 (id, identifier, title, footprint, acquisitiontype, beginposition, endposition, filename, format, instrumentname, instrumentshortname, lastorbitnumber, lastrelativeorbitnumber, quicklookiconname, missiondatatakeid, orbitdirection, orbitnumber, platformidentifier, polarisationmode, productclass, producttype, relativeorbitnumber, sensoroperationalmode, size, slicenumber, swathidentifier) VALUES ('{}', '{}', '{}', ST_GeomFromGeoJSON('{}'), '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');".format(
-                                id, identifier, title, footprint, acquisitiontype, beginposition, endposition, filename,
-                                format, instrumentname, instrumentshortname, lastorbitnumber, lastrelativeorbitnumber,
+                            "INSERT INTO {} (id, identifier, title, footprint, acquisitiontype, beginposition, endposition, filename, format, instrumentname, instrumentshortname, lastorbitnumber, lastrelativeorbitnumber, quicklookiconname, missiondatatakeid, orbitdirection, orbitnumber, platformidentifier, polarisationmode, productclass, producttype, relativeorbitnumber, sensoroperationalmode, size, slicenumber, swathidentifier) VALUES ('{}', '{}', '{}', ST_GeomFromGeoJSON('{}'), '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');".format(
+                                table_name, id, identifier, title, footprint, acquisitiontype, beginposition, endposition,
+                                filename, format, instrumentname, instrumentshortname, lastorbitnumber, lastrelativeorbitnumber,
                                 quicklookiconname, missiondatatakeid, orbitdirection, orbitnumber, platformidentifier,
                                 polarisationmode, productclass, producttype, relativeorbitnumber, sensoroperationalmode,
                                 size, slicenumber, swathidentifier))

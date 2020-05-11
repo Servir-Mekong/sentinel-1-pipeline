@@ -106,7 +106,7 @@ def save_cookie_creation_date():
 
 
 class bulk_downloader:
-    def __init__(self, id, username, password):
+    def __init__(self, id, username, password, table_name):
         # List of files to download
         if id[:3] == 'S1A':
             self.files = ['https://datapool.asf.alaska.edu/GRD_HD/SA/{}.zip'.format(id)]
@@ -119,6 +119,7 @@ class bulk_downloader:
 
         self.username = username
         self.password = password
+        self.table_name = table_name
 
         # Local stash of cookies so we don't always have to ask
         self.cookie_jar_path = os.path.join(os.path.dirname(os.path.abspath('__file__')),
@@ -656,7 +657,7 @@ class bulk_downloader:
         if len(self.success) > 0:
             try:
                 conn, cur = connect_to_db()
-                cur.execute("UPDATE sentinel1 SET downloaded=TRUE WHERE rid={}".format(rid))
+                cur.execute("UPDATE {} SET downloaded=TRUE WHERE rid={}".format(self.table_name, rid))
                 conn.commit()
                 close_connection(conn, cur)
             except Exception as e:
@@ -667,7 +668,7 @@ class bulk_downloader:
         if len(self.skipped) > 0:
             try:
                 conn, cur = connect_to_db()
-                cur.execute("UPDATE sentinel1 SET downloaded=FALSE WHERE rid={}".format(rid))
+                cur.execute("UPDATE {} SET downloaded=FALSE WHERE rid={}".format(self.table_name, rid))
                 conn.commit()
                 close_connection(conn, cur)
             except Exception as e:
@@ -681,6 +682,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
 
     start_year = int(os.getenv('YEAR'))
+    table_name = os.getenv('TABLE_NAME')
     username = os.getenv('EARTHDATA_USERNAME')
     password = os.getenv('EARTHDATA_PASSWORD')
 
@@ -689,13 +691,13 @@ if __name__ == "__main__":
     while condition:
         conn, cur = connect_to_db()
         cur.execute(
-            "SELECT id, title, rid FROM sentinel1 where beginposition::date = date '{}' AND downloaded=FALSE;".format(
-                _date.strftime('%Y-%m-%d'), False))
+            "SELECT id, title, rid FROM {} where beginposition::date = date '{}' AND downloaded=FALSE;".format(
+                table_name, _date.strftime('%Y-%m-%d')))
         columns = cur.fetchall()
         close_connection(conn, cur)
         for column in columns:
             try:
-                downloader = bulk_downloader(column[1], username, password)
+                downloader = bulk_downloader(column[1], username, password, table_name)
                 downloader.download_files()
                 downloader.print_summary(column[2])
                 print('data downloaded for date {}: '.format(_date.strftime('%Y-%m-%d')))

@@ -66,9 +66,9 @@ def set_path():
     return path
 
 
-def get_unprocessed_data(year):
-    query = "SELECT title, footprint FROM sentinel1 WHERE beginposition >= '{}-01-01' AND beginposition < '{}-01-01' " \
-            "AND processed={} AND slave={} ORDER BY title;".format(year, year + 1, False, False)
+def get_unprocessed_data(year, table_name):
+    query = "SELECT title, footprint FROM {} WHERE beginposition >= '{}-01-01' AND beginposition < '{}-01-01' " \
+            "AND processed={} AND slave={} ORDER BY title;".format(table_name, year, year + 1, False, False)
     data = get_query(query)
     output = []
     for _data in data:
@@ -81,8 +81,8 @@ def get_unprocessed_data(year):
     return output
 
 
-def get_slaves():
-    query = "SELECT title, footprint FROM sentinel1 WHERE slave={};".format(True, )
+def get_slaves(table_name):
+    query = "SELECT title, footprint FROM {} WHERE slave={};".format(table_name, True)
     data = get_query(query)
     output = []
     for _data in data:
@@ -149,11 +149,11 @@ def get_string_month(month):
 
 
 def main():
+    table_name = os.getenv('TABLE_NAME')
+
     year = int(os.getenv('YEAR'))
-
-    data = get_unprocessed_data(year)
-
-    slaves = get_slaves()
+    data = get_unprocessed_data(year, table_name)
+    slaves = get_slaves(table_name)
 
     for _data in data:
         try:
@@ -219,7 +219,7 @@ def main():
                 os.remove(subset_path)
 
             conn, cur = connect_to_db(db)
-            cur.execute("UPDATE sentinel1 SET processed=TRUE WHERE slave=FALSE and title='{}'".format(file_name))
+            cur.execute("UPDATE {} SET processed=TRUE WHERE slave=FALSE and title='{}'".format(table_name, file_name))
             conn.commit()
             close_connection(conn, cur)
 

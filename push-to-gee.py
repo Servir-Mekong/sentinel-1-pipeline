@@ -33,14 +33,15 @@ properties = ['acquisitiontype', 'lastorbitnumber', 'lastrelativeorbitnumber', '
               'sensoroperationalmode', 'swathidentifier']
 
 
-def get_processed_images():
-    query = "SELECT id, title, beginposition, endposition, {} FROM sentinel1 WHERE processed={} AND slave={} " \
-            "AND uploadedtogs={} ORDER BY title;".format(','.join(properties), True, False, False)
+def get_processed_images(table_name):
+    query = "SELECT id, title, beginposition, endposition, {} FROM {} WHERE processed={} AND slave={} " \
+            "AND uploadedtogs={} ORDER BY title;".format(','.join(properties), table_name, True, False, False)
     return get_query(query)
 
 
 def main():
-    processed_images = get_processed_images()
+    table_name = os.getenv('TABLE_NAME')
+    processed_images = get_processed_images(table_name)
     for image in processed_images:
         output_files = glob.glob(output_path + '*{}*.tif'.format(image[1]))
 
@@ -124,7 +125,7 @@ def main():
         if 'ID:' in result:
             task_id = result.split("ID:")[1].strip()
             # save the info
-            query = "UPDATE sentinel1 SET uploadedtogs=TRUE, ee_task_id='{}' WHERE id='{}'".format(task_id, image[0])
+            query = "UPDATE {} SET uploadedtogs=TRUE, ee_task_id='{}' WHERE id='{}'".format(table_name, task_id, image[0])
             update_query(query)
 
 

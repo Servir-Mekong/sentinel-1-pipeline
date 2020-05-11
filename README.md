@@ -19,7 +19,7 @@ We are using Graph Processor Tool (GPT) to process the sentinel-1 datasets.
 We use [Copernicus Open Access Hub](https://scihub.copernicus.eu/) to download the metadata available for the images.
 Change your username and password on .env file variable `COPERNICUS_USERNAME` and `COPERNICUS_PASSWORD`
 
-script: `download_metadata.py`
+script: `download_image_metadata.py`
 
 ## 2. Downloading Image
 
@@ -28,7 +28,7 @@ This [blog post](https://thegeoict.com/blog/2019/08/19/processing-sentinel-1-sar
 
 All the images are saved in dir `images`.
 
-script: `download_data.py`
+script: `download_image.py`
 
 ## 3. Preparing Slaves
 
