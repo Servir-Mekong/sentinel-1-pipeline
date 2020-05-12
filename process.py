@@ -24,6 +24,7 @@ intermediate_output_path = os.getenv('INTERMEDIATE_OUTPUT_PATH')
 output_path = os.getenv('OUTPUT_PATH')
 
 graph_path = os.getenv('PROCESSING_XML')
+graph_wo_coregister_path = os.getenv('PROCESSING_WO_COREGISTRATION_XML')
 coregister_path = os.getenv('COREGISTRATION_XML')
 coregister_template = os.getenv('COREGISTRATION_TEMPLATE')
 
@@ -34,6 +35,9 @@ gpt_path = os.getenv('GPT_PATH')
 
 exec_cmd = '%s %s -t %s{}_Orb_Cal_ML_TF.dim {}.zip' % (gpt_path, graph_path, intermediate_output_path)
 coreg_cmd = '%s %s -t %s{0}_Orb_Cal_ML_TF_Stack_Spk_EC.dim' % (gpt_path, coregister_path, intermediate_output_path)
+
+exec_wo_coregister_cmd = '%s %s -t %s{}_Orb_Cal_ML_TF.dim {}.zip' % (gpt_path, graph_wo_coregister_path, intermediate_output_path)
+
 export_cmd = '%s %s -t %s{}_{} -f GeoTIFF-BigTIFF' % (gpt_path, subset_path, output_path)
 
 
@@ -156,6 +160,7 @@ def main():
     slaves = get_slaves(table_name)
 
     for _data in data:
+        intersecting_slaves = get_intersecting_slaves(_data, slaves)
         try:
             start_time = time.time()
             file_name = _data['file'].split(image_path)[1]
@@ -184,29 +189,39 @@ def main():
 
             select_bands = list(set(_select_bands))
 
-            intersecting_slaves = get_intersecting_slaves(_data, slaves)
-            before_coregistration = exec_cmd.format(file_name, _data['file'])
-            result = subprocess.check_output(before_coregistration, shell=True)
-            print(result)
+            if len(intersecting_slaves) - 1 < 2:
+                # without coregistration
+                logging.info('> processing {} without coregistration because no interesting slaves found'.format(_data['file']))
+                processing = exec_wo_coregister_cmd.format(file_name, _data['file'])
+                result = subprocess.check_output(processing, shell=True)
+                print(result)
+            else:
+                logging.info('> processing {} with {} slaves'.format(_data['file']), len(intersecting_slaves) - 1)
+                before_coregistration = exec_cmd.format(file_name, _data['file'])
+                result = subprocess.check_output(before_coregistration, shell=True)
+                print(result)
 
-            registration_tree, master_slave_node, terrain_correction_node = get_nodes()
-            master_slave_list = master_slave_node.xpath('//fileList')[0]
-            master_slave_list.text = list_dict_to_string(intersecting_slaves, 'file')
+                registration_tree, master_slave_node, terrain_correction_node = get_nodes()
+                master_slave_list = master_slave_node.xpath('//fileList')[0]
+                master_slave_list.text = list_dict_to_string(intersecting_slaves, 'file')
 
-            source_bands_list = terrain_correction_node.xpath('//sourceBands')[0]
-            source_bands_list.text = ','.join(select_bands)
+                source_bands_list = terrain_correction_node.xpath('//sourceBands')[0]
+                source_bands_list.text = ','.join(select_bands)
 
-            with open(coregister_path, 'w') as f:
-                f.write(tostring(registration_tree, pretty_print=True))
+                with open(coregister_path, 'w') as f:
+                    f.write(tostring(registration_tree, pretty_print=True))
 
-            after_coregistration = coreg_cmd.format(file_name)
-            result = subprocess.check_output(after_coregistration, shell=True)
-            print(result)
+                after_coregistration = coreg_cmd.format(file_name)
+                result = subprocess.check_output(after_coregistration, shell=True)
+                print(result)
 
             for select_band in select_bands:
                 subset_tree, product_reader_node, subset_node = get_subset_node()
                 file_source = product_reader_node.xpath('//file')[0]
-                file_source.text = '{}{}_Orb_Cal_ML_TF_Stack_Spk_EC.dim'.format(intermediate_output_path, file_name)
+                if len(intersecting_slaves) - 1 < 2:
+                    file_source.text = '{}{}_Orb_Cal_ML_TF_Spk_EC.dim'.format(intermediate_output_path, file_name)
+                else:
+                    file_source.text = '{}{}_Orb_Cal_ML_TF_Stack_Spk_EC.dim'.format(intermediate_output_path, file_name)
                 subset_source_band = subset_node.xpath('//sourceBands')[0]
                 subset_source_band.text = select_band
                 with open(subset_path, 'w') as f:
@@ -223,18 +238,19 @@ def main():
             conn.commit()
             close_connection(conn, cur)
 
-            os.remove(coregister_path)
+            if os.path.exists(coregister_path):
+                os.remove(coregister_path)
 
             end_time = time.time()
 
             with open('logs/performance.log', 'a') as plog:
-                plog.write('file {} => {} slaves => {} minutes\n'.format(file_name, len(intersecting_slaves) - 1,
+                plog.write('> file {} => {} slaves => {} minutes\n'.format(file_name, len(intersecting_slaves) - 1,
                                                                          (end_time - start_time) / 60))
 
             print('end file')
             print('********************************************************')
         except Exception as e:
-            logging.error(e)
+            logging.error('> total {} slaves \n error {}'.format(len(intersecting_slaves) - 1, e))
             print(e)
             continue
 

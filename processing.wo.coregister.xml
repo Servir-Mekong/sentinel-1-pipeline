@@ -1,0 +1,113 @@
+<graph id="preprocessingSentinel1">
+    <version>1.0</version>
+
+    <!-- Apply Orbit File Node -->
+    <node id="ApplyOrbitFileNode">
+        <operator>Apply-Orbit-File</operator>
+        <sources>
+            <source>${sourceProducts}</source>
+        </sources>
+        <parameters>
+            <continueOnFail>false</continueOnFail>
+        </parameters>
+    </node>
+
+    <!-- Thermal Noise Removal Node -->
+    <node id="ThermalNoiseRemovalNode">
+        <operator>ThermalNoiseRemoval</operator>
+        <sources>
+            <sourceProduct>ApplyOrbitFileNode</sourceProduct>
+        </sources>
+        <parameters>
+            <removeThermalNoise>true</removeThermalNoise>
+            <reIntroduceThermalNoise>false</reIntroduceThermalNoise>
+        </parameters>
+    </node>
+
+    <!-- Border Noise Removal Node -->
+    <node id="BorderNoiseRemovalNode">
+        <operator>Remove-GRD-Border-Noise</operator>
+        <sources>
+            <sourceProduct>ThermalNoiseRemovalNode</sourceProduct>
+        </sources>
+        <parameters>
+            <borderLimit>1000</borderLimit>
+            <trimThreshold>0.5</trimThreshold>
+        </parameters>
+    </node>
+
+    <!-- Calibration Node -->
+    <node id="CalibrationNode">
+        <operator>Calibration</operator>
+        <sources>
+            <source>BorderNoiseRemovalNode</source>
+        </sources>
+        <parameters>
+            <outputSigmaBand>false</outputSigmaBand>
+            <outputGammaBand>false</outputGammaBand>
+            <outputBetaBand>true</outputBetaBand>
+        </parameters>
+    </node>
+
+    <!-- Multilook Node -->
+    <node id="MultilookNode">
+        <operator>Multilook</operator>
+        <sources>
+            <source>CalibrationNode</source>
+        </sources>
+        <parameters>
+            <nRgLooks>1</nRgLooks>
+            <nAzLooks>1</nAzLooks>
+            <outputIntensity>true</outputIntensity>
+            <grSquarePixel>true</grSquarePixel>
+        </parameters>
+    </node>
+
+    <!-- Terrain Flattening Node -->
+    <node id="TerrainFlatteningNode">
+        <operator>Terrain-Flattening</operator>
+        <sources>
+            <source>MultilookNode</source>
+        </sources>
+        <parameters>
+            <demName>SRTM 1Sec HGT</demName>
+            <demResamplingMethod>BICUBIC_INTERPOLATION</demResamplingMethod>
+            <oversamplingMultiple>1.5</oversamplingMultiple>
+            <additionalOverlap>0.1</additionalOverlap>
+        </parameters>
+    </node>
+
+    <!-- Speckle Filter Node -->
+    <node id="SpeckleFilterNode">
+        <operator>Speckle-Filter</operator>
+        <sources>
+            <source>TerrainFlatteningNode</source>
+        </sources>
+        <parameters>
+            <filter>Refined Lee</filter>
+            <!--<enl>4.0</enl>
+            <numLooksStr>4</numLooksStr>
+            <windowSize>9x9</windowSize>
+            <sigmaStr>0.9</sigmaStr>
+            <targetWindowSizeStr>5x5</targetWindowSizeStr>-->
+        </parameters>
+    </node>
+
+    <!-- RD Terrain Correction Node -->
+    <node id="TerrainCorrectionNode">
+        <operator>Terrain-Correction</operator>
+        <sources>
+            <source>SpeckleFilterNode</source>
+        </sources>
+        <parameters>
+            <sourceBands></sourceBands>
+            <demName>SRTM 1Sec HGT</demName>
+            <demResamplingMethod>BICUBIC_INTERPOLATION</demResamplingMethod>
+            <imgResamplingMethod>BICUBIC_INTERPOLATION</imgResamplingMethod>
+            <nodataValueAtSea>false</nodataValueAtSea>
+            <pixelSpacingInMeter>10.0</pixelSpacingInMeter>
+            <pixelSpacingInDegree>8.983152841195215E-5</pixelSpacingInDegree>
+        </parameters>
+    </node>
+
+</graph>

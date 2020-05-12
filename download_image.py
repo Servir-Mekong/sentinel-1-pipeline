@@ -6,7 +6,7 @@ load_dotenv('.env')
 import logging
 logging.basicConfig(filename='logs/download.data.log', level=logging.INFO)
 
-import sys, csv
+import sys
 import os
 import platform
 import tempfile, shutil
@@ -17,7 +17,6 @@ import time
 import ssl
 import signal
 
-import xml.etree.ElementTree as ET
 from dbio import *
 from datetime import datetime, timedelta
 import json
