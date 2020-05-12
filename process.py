@@ -33,10 +33,10 @@ subset_template = os.getenv('SUBSET_XML')
 
 gpt_path = os.getenv('GPT_PATH')
 
-exec_cmd = '%s %s -t %s{}_Orb_Cal_ML_TF.dim {}.zip' % (gpt_path, graph_path, intermediate_output_path)
-coreg_cmd = '%s %s -t %s{0}_Orb_Cal_ML_TF_Stack_Spk_EC.dim' % (gpt_path, coregister_path, intermediate_output_path)
+exec_cmd = '%s %s -t %s{}_Orb_TNR_Bdr_Cal_ML_TF.dim {}.zip' % (gpt_path, graph_path, intermediate_output_path)
+coreg_cmd = '%s %s -t %s{}_Orb_TNR_Bdr_Cal_ML_TF_Stack_Spk_TC.dim' % (gpt_path, coregister_path, intermediate_output_path)
 
-exec_wo_coregister_cmd = '%s %s -t %s{}_Orb_Cal_ML_TF.dim {}.zip' % (gpt_path, graph_wo_coregister_path, intermediate_output_path)
+exec_wo_coregister_cmd = '%s %s -t %s{}_Orb_TNR_Bdr_Cal_ML_TF_Spk_TC.dim {}.zip' % (gpt_path, graph_wo_coregister_path, intermediate_output_path)
 
 export_cmd = '%s %s -t %s{}_{} -f GeoTIFF-BigTIFF' % (gpt_path, subset_path, output_path)
 
@@ -101,12 +101,13 @@ def get_slaves(table_name):
 def get_intersecting_slaves(master, slaves):
     output = [{
         'geom': master['geom'],
-        'file': '{}{}_Orb_Cal_ML_TF.dim'.format(intermediate_output_path, master['title'])
+        'file': '{}{}_Orb_TNR_Bdr_Cal_ML_TF.dim'.format(intermediate_output_path, master['title'])
     }]
     for slave in slaves:
         if slave['geom'].intersects(master['geom']):
             pair = {
                 'geom': slave['geom'],
+                # salves has old naming convections. Update it if needed
                 'file': '{}{}_Orb_Cal_ML_TF.dim'.format(slave_path, slave['title'])
             }
             output.append(pair)
@@ -154,10 +155,11 @@ def get_string_month(month):
 
 def main():
     table_name = os.getenv('TABLE_NAME')
+    slave_table = os.getenv('SLAVE_TABLE')
 
     year = int(os.getenv('YEAR'))
     data = get_unprocessed_data(year, table_name)
-    slaves = get_slaves(table_name)
+    slaves = get_slaves(slave_table)
 
     for _data in data:
         intersecting_slaves = get_intersecting_slaves(_data, slaves)
@@ -219,9 +221,9 @@ def main():
                 subset_tree, product_reader_node, subset_node = get_subset_node()
                 file_source = product_reader_node.xpath('//file')[0]
                 if len(intersecting_slaves) - 1 < 2:
-                    file_source.text = '{}{}_Orb_Cal_ML_TF_Spk_EC.dim'.format(intermediate_output_path, file_name)
+                    file_source.text = '{}{}_Orb_TNR_Bdr_Cal_ML_TF_Spk_TC.dim'.format(intermediate_output_path, file_name)
                 else:
-                    file_source.text = '{}{}_Orb_Cal_ML_TF_Stack_Spk_EC.dim'.format(intermediate_output_path, file_name)
+                    file_source.text = '{}{}_Orb_TNR_Bdr_Cal_ML_TF_Stack_Spk_TC.dim'.format(intermediate_output_path, file_name)
                 subset_source_band = subset_node.xpath('//sourceBands')[0]
                 subset_source_band.text = select_band
                 with open(subset_path, 'w') as f:
