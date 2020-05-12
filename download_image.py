@@ -140,50 +140,6 @@ class bulk_downloader:
         # For SSL
         self.context = {}
 
-        # Check if user handed in a Metalink or CSV:
-        if len(sys.argv) > 0:
-            download_files = []
-            input_files = []
-            for arg in sys.argv[1:]:
-                if arg == '--insecure':
-                    try:
-                        ctx = ssl.create_default_context()
-                        ctx.check_hostname = False
-                        ctx.verify_mode = ssl.CERT_NONE
-                        self.context['context'] = ctx
-                    except AttributeError as e:
-                        # Python 2.6 won't complain about SSL Validation
-                        pass
-                        logging.error(e)
-
-                elif arg.endswith('.metalink') or arg.endswith('.csv'):
-                    if os.path.isfile(arg):
-                        input_files.append(arg)
-                        if arg.endswith('.metalink'):
-                            new_files = self.process_metalink(arg)
-                        else:
-                            new_files = self.process_csv(arg)
-                        if new_files is not None:
-                            for file_url in (new_files):
-                                download_files.append(file_url)
-                    else:
-                        print(' > I cannot find the input file you specified: {0}'.format(arg))
-                else:
-                    pass
-                    # print (" > Command line argument '{0}' makes no sense, ignoring.".format(arg))
-
-            if len(input_files) > 0:
-                if len(download_files) > 0:
-                    print(' > Processing {0} downloads from {1} input files. '.format(len(download_files),
-                                                                                      len(input_files)))
-                    self.files = download_files
-                else:
-                    print(
-                        ' > I see you asked me to download files from {0} input files, but they had no downloads!'.format(
-                            len(input_files)))
-                    print(" > I'm super confused and exiting.")
-                    exit(-1)
-
         # Make sure cookie_jar is good to go!
         self.get_cookie()
 
@@ -219,7 +175,7 @@ class bulk_downloader:
                 print(' > Could not validate old cookie Jar')
 
         # We don't have a valid cookie, prompt user or creds
-        print('No existing URS cookie found, please enter Earthdata username & password:')
+        print('No existing URS cookie found, creating one')
         print('(Credentials will not be stored, saved or logged anywhere)')
 
         # Keep trying 'till user gets the right U:P
@@ -288,12 +244,7 @@ class bulk_downloader:
     def get_new_cookie(self):
         # Start by prompting user to input their credentials
 
-        # Another Python2/3 workaround
-        try:
-            new_username = self.username
-        except NameError:
-            pass
-            # new_username = input("Username: ")
+        new_username = self.username
         new_password = self.password
 
         # Build URS4 Cookie request
@@ -548,50 +499,6 @@ class bulk_downloader:
                 return None
 
         return int(file_size)
-
-    # Get download urls from a metalink file
-    def process_metalink(self, ml_file):
-        print("Processing metalink file: {0}".format(ml_file))
-        with open(ml_file, 'r') as ml:
-            xml = ml.read()
-
-        # Hack to remove annoying namespace
-        it = ET.iterparse(StringIO(xml))
-        for _, el in it:
-            if '}' in el.tag:
-                el.tag = el.tag.split('}', 1)[1]  # strip all namespaces
-        root = it.root
-
-        dl_urls = []
-        ml_files = root.find('files')
-        for dl in ml_files:
-            dl_urls.append(dl.find('resources').find('url').text)
-
-        if len(dl_urls) > 0:
-            return dl_urls
-        else:
-            return None
-
-    # Get download urls from a csv file
-    def process_csv(self, csv_file):
-        print("Processing csv file: {0}".format(csv_file))
-
-        dl_urls = []
-        with open(csv_file, 'r') as csvf:
-            try:
-                csvr = csv.DictReader(csvf)
-                for row in csvr:
-                    dl_urls.append(row['URL'])
-            except csv.Error as e:
-                print("WARNING: Could not parse file %s, line %d: %s. Skipping." % (csv_file, csvr.line_num, e))
-                return None
-            except KeyError as e:
-                print("WARNING: Could not find URL column in file %s. Skipping." % (csv_file))
-
-        if len(dl_urls) > 0:
-            return dl_urls
-        else:
-            return None
 
     # Download all the files in the list
     def download_files(self):

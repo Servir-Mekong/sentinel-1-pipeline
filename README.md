@@ -68,8 +68,8 @@ d. Calibration
 
 e. Multilook
 
-    i.   No. of Range Looks (nRgLooks): 3
-    ii.  No. of Azimuth Looks (nAzLooks): 3
+    i.   No. of Range Looks (nRgLooks): 1
+    ii.  No. of Azimuth Looks (nAzLooks): 1
     iii. outputIntensity: true
     iv.  grSquarePixel: true
 
@@ -92,12 +92,7 @@ NB: The slaves list are obtained by selecting those images processed in 4. that 
 
 h. Speckle Filtering
 
-    i.   filter: Lee Sigma
-    ii.  enl: 4.0
-    iii. numLooksStr: 4
-    iv.  windowSize: 9x9
-    v.   sigmaStr: 0.9
-    vi.  targetWindowSizeStr: 5x5
+    i.   filter: Refined Lee
 
 i. Range-Doppler Terrain Correction
 
