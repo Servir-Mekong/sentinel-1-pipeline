@@ -119,6 +119,7 @@ class bulk_downloader:
         self.username = username
         self.password = password
         self.table_name = table_name
+        self.save_to = os.getenv('IMAGES_PATH')
 
         # Local stash of cookies so we don't always have to ask
         self.cookie_jar_path = os.path.join(os.path.dirname(os.path.abspath('__file__')),
@@ -309,7 +310,7 @@ class bulk_downloader:
     def download_file_with_cookiejar(self, url, file_count, total, recursion=False):
         # see if we've already download this file and if it is that it is the correct size
         download_file = os.path.basename(url).split('?')[0]
-        if os.path.isfile(download_file):
+        if os.path.isfile(os.path.join(self.save_to, download_file)):
             try:
                 request = Request(url)
                 request.get_method = lambda: 'HEAD'
@@ -317,7 +318,7 @@ class bulk_downloader:
                 remote_size = self.get_total_size(response)
                 # Check that we were able to derive a size.
                 if remote_size:
-                    local_size = os.path.getsize(download_file)
+                    local_size = os.path.getsize(os.path.join(self.save_to, download_file))
                     if remote_size < (local_size + (local_size * .01)) and remote_size > (
                             local_size - (local_size * .01)):
                         print(" > Download file {0} exists! \n > Skipping download of {1}. ".format(download_file, url))
@@ -325,7 +326,7 @@ class bulk_downloader:
                     # partial file size wasn't full file size, lets blow away the chunk and start again
                     print(" > Found {0} but it wasn't fully downloaded. Removing file and downloading again.".format(
                         download_file))
-                    os.remove(download_file)
+                    os.remove(os.path.join(self.save_to, download_file))
 
             except ssl.CertificateError as e:
                 print(" > ERROR: {0}".format(e))
@@ -432,23 +433,14 @@ class bulk_downloader:
             return False, None
 
         # Return the file size
-        shutil.copy(tempfile_name, download_file)
+        shutil.copy(tempfile_name, os.path.join(self.save_to, download_file))
         os.remove(tempfile_name)
         file_size = self.get_total_size(response)
-        actual_size = os.path.getsize(download_file)
+        actual_size = os.path.getsize(os.path.join(self.save_to, download_file))
         if file_size is None:
             # We were unable to calculate file size.
             file_size = actual_size
         return actual_size, file_size
-
-    def get_redirect_url_from_error(self, error):
-        find_redirect = re.compile(r"id=\"redir_link\"\s+href=\"(\S+)\"")
-        print("error file was: {}".format(error))
-        redirect_url = find_redirect.search(error)
-        if redirect_url:
-            print("Found: {0}".format(redirect_url.group(0)))
-            return (redirect_url.group(0))
-        return None
 
     #  chunk_report taken from http://stackoverflow.com/questions/2028517/python-urllib2-progress-hook
     def chunk_report(self, bytes_so_far, file_size):

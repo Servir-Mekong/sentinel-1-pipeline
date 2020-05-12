@@ -11,7 +11,7 @@ import subprocess
 
 from dbio import *
 
-image_path = os.getenv('IMAGES_PATH')
+image_path = '{}/'.format(os.getenv('IMAGES_PATH'))
 slave_path = os.getenv('SLAVES_PATH') #'/mnt/sentinel1/slaves/'
 graph_path = os.getenv('PROCESSING_XML')
 gpt_path = os.getenv('GPT_PATH')

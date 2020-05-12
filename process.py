@@ -18,7 +18,7 @@ from lxml import etree
 from shapely import wkb
 from dbio import *
 
-image_path = os.getenv('IMAGES_PATH')
+image_path = '{}/'.format(os.getenv('IMAGES_PATH'))
 slave_path = os.getenv('SLAVES_PATH')
 intermediate_output_path = os.getenv('INTERMEDIATE_OUTPUT_PATH')
 output_path = os.getenv('OUTPUT_PATH')
