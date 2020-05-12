@@ -10,7 +10,6 @@ import sys
 import os
 import platform
 import tempfile, shutil
-import re
 
 import base64
 import time
