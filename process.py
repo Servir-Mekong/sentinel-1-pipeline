@@ -198,7 +198,7 @@ def main():
                 result = subprocess.check_output(processing, shell=True)
                 print(result)
             else:
-                logging.info('> processing {} with {} slaves'.format(_data['file']), len(intersecting_slaves) - 1)
+                logging.info('> processing {} with {} slaves'.format(_data['file'], len(intersecting_slaves) - 1))
                 before_coregistration = exec_cmd.format(file_name, _data['file'])
                 result = subprocess.check_output(before_coregistration, shell=True)
                 print(result)
