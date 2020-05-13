@@ -245,7 +245,7 @@ def main():
 
                 os.remove(subset_path)
 
-            conn, cur = connect_to_db(db)
+            conn, cur = connect_to_db()
             cur.execute("UPDATE {} SET processed=TRUE WHERE slave=FALSE and title='{}'".format(table_name, file_name))
             conn.commit()
             close_connection(conn, cur)
