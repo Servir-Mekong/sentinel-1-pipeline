@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from dotenv import load_dotenv
+
 load_dotenv('.env')
 
 import logging
+
 logging.basicConfig(filename='logs/process.log', level=logging.INFO)
 
 import os
 import sys
+
 sys.path.append(os.getenv('SNAPPY_PATH'))
 from snappy import ProductIO
 
@@ -28,15 +31,17 @@ graph_wo_coregister_path = os.getenv('PROCESSING_WO_COREGISTRATION_XML')
 coregister_path = os.getenv('COREGISTRATION_XML')
 coregister_template = os.getenv('COREGISTRATION_TEMPLATE')
 
-subset_path = os.getenv('SUBSET_TEMPLATE')
-subset_template = os.getenv('SUBSET_XML')
+subset_path = os.getenv('SUBSET_XML')
+subset_template = os.getenv('SUBSET_TEMPLATE')
 
 gpt_path = os.getenv('GPT_PATH')
 
 exec_cmd = '%s %s -t %s{}_Orb_TNR_Bdr_Cal_ML_TF.dim {}.zip' % (gpt_path, graph_path, intermediate_output_path)
-coreg_cmd = '%s %s -t %s{}_Orb_TNR_Bdr_Cal_ML_TF_Stack_Spk_TC.dim' % (gpt_path, coregister_path, intermediate_output_path)
+coreg_cmd = '%s %s -t %s{}_Orb_TNR_Bdr_Cal_ML_TF_Stack_Spk_TC.dim' % (
+gpt_path, coregister_path, intermediate_output_path)
 
-exec_wo_coregister_cmd = '%s %s -t %s{}_Orb_TNR_Bdr_Cal_ML_TF_Spk_TC.dim {}.zip' % (gpt_path, graph_wo_coregister_path, intermediate_output_path)
+exec_wo_coregister_cmd = '%s %s -t %s{}_Orb_TNR_Bdr_Cal_ML_TF_Spk_TC.dim {}.zip' % (
+gpt_path, graph_wo_coregister_path, intermediate_output_path)
 
 export_cmd = '%s %s -t %s{}_{} -f GeoTIFF-BigTIFF' % (gpt_path, subset_path, output_path)
 
@@ -167,6 +172,8 @@ def main():
             start_time = time.time()
             file_name = _data['file'].split(image_path)[1]
             print('********************************************************')
+            print('********************************************************')
+            print('********************************************************')
             print('started file: {}'.format(file_name))
 
             image_datetime = file_name.split('_')[4]
@@ -193,7 +200,8 @@ def main():
 
             if len(intersecting_slaves) - 1 < 2:
                 # without coregistration
-                logging.info('> processing {} without coregistration because no interesting slaves found'.format(_data['file']))
+                logging.info(
+                    '> processing {} without coregistration because no interesting slaves found'.format(_data['file']))
                 processing = exec_wo_coregister_cmd.format(file_name, _data['file'])
                 result = subprocess.check_output(processing, shell=True)
                 print(result)
@@ -221,9 +229,11 @@ def main():
                 subset_tree, product_reader_node, subset_node = get_subset_node()
                 file_source = product_reader_node.xpath('//file')[0]
                 if len(intersecting_slaves) - 1 < 2:
-                    file_source.text = '{}{}_Orb_TNR_Bdr_Cal_ML_TF_Spk_TC.dim'.format(intermediate_output_path, file_name)
+                    file_source.text = '{}{}_Orb_TNR_Bdr_Cal_ML_TF_Spk_TC.dim'.format(intermediate_output_path,
+                                                                                      file_name)
                 else:
-                    file_source.text = '{}{}_Orb_TNR_Bdr_Cal_ML_TF_Stack_Spk_TC.dim'.format(intermediate_output_path, file_name)
+                    file_source.text = '{}{}_Orb_TNR_Bdr_Cal_ML_TF_Stack_Spk_TC.dim'.format(intermediate_output_path,
+                                                                                            file_name)
                 subset_source_band = subset_node.xpath('//sourceBands')[0]
                 subset_source_band.text = select_band
                 with open(subset_path, 'w') as f:
@@ -247,9 +257,11 @@ def main():
 
             with open('logs/performance.log', 'a') as plog:
                 plog.write('> file {} => {} slaves => {} minutes\n'.format(file_name, len(intersecting_slaves) - 1,
-                                                                         (end_time - start_time) / 60))
+                                                                           (end_time - start_time) / 60))
 
-            print('end file')
+            print('end file in {} minutes'.format((end_time - start_time) / 60))
+            print('********************************************************')
+            print('********************************************************')
             print('********************************************************')
         except Exception as e:
             logging.error('> total {} slaves \n error {}'.format(len(intersecting_slaves) - 1, e))
