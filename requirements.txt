@@ -41,7 +41,7 @@ PySocks==1.7.1
 python-dotenv==0.13.0
 pytz==2019.3
 requests==2.22.0
-rsa==4.0
+rsa==4.7
 scandir==1.10.0
 sentinelsat~=0.13
 simplegeneric==0.8.1
