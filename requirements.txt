@@ -49,5 +49,5 @@ simplejson==3.17.0
 six==1.14.0
 traitlets==4.3.3
 uritemplate==3.0.1
-urllib3==1.25.7
+urllib3==1.26.5
 wcwidth==0.1.8
