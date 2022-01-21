@@ -21,7 +21,7 @@ googleapis-common-protos==1.51.0
 httplib2==0.18.0
 idna==2.8
 ipaddress==1.0.23
-ipython==5.8.0
+ipython==7.16.3
 ipython-genutils==0.2.0
 lxml~=4.2.5
 numpy==1.16.5
