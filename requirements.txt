@@ -29,7 +29,7 @@ pathlib2==2.3.5
 pexpect==4.8.0
 pickleshare==0.7.5
 prompt-toolkit==1.0.15
-protobuf==3.11.2
+protobuf==3.15.0
 psycopg2==2.8.4
 ptyprocess==0.6.0
 pyasn1==0.4.8
