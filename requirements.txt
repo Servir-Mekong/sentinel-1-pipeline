@@ -24,7 +24,7 @@ ipaddress==1.0.23
 ipython==5.8.0
 ipython-genutils==0.2.0
 lxml~=4.2.5
-numpy==1.16.5
+numpy==1.22.0
 pathlib2==2.3.5
 pexpect==4.8.0
 pickleshare==0.7.5
